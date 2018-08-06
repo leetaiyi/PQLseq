@@ -1,7 +1,7 @@
 ########################################################################################################################
 # Package: PQLseq
-# Version: 1.0.1
-# Date   : 2018-06-03
+# Version: 1.1
+# Date   : 2018-08-05
 # Title  : Heritability Estimation and Differential Analysis with Generalized Linear Mixed Models in Large-Scale Genomic Sequencing Studies
 # Authors: Shiquan Sun, Jiaqiang Zhu, and Xiang Zhou
 # Contact: shiquans@umich.edu and jiaqiang@umich.edu 
@@ -15,10 +15,13 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 	# specify the number of cores we want to use
 	if(numCore > 1){
 		if(numCore>detectCores()){warning("PQLseq:: the number of cores you're setting is larger than detected cores!");numCore = detectCores()-1}
-		#cl <- makeCluster(numCore)
 	}
+
 	registerDoParallel(numCore)
-	
+
+	# cl <- makeCluster(numCore)
+	# registerDoParallel(cl,cores=numCore)
+	# on.exit(stopCluster(cl))
 	
 	# filtering genes/sites
 	if (filtering & fit.model == "PMM"){
@@ -34,7 +37,7 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 	
 	# remove the intercept
 	if(length(unique(Covariates[,1])) == 1){
-		Covariates<-Covariates[,-1]
+		Covariates<- Covariates[,-1]
 	}
 
 	if(is.null(Covariates)){
@@ -91,12 +94,12 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 		resPMM <-foreach(iVar=1:numVar,.combine=rbind)%dopar%{
 			numAnalysis <- beta <- tau1 <- tau2 <- se_beta <- pvalue <- converged <- h2 <- sigma2 <- overdisp <- NA
 			if(numCov==0){
-				model0 <- glm(formula = CountData[iVar,]~Phenotypes + offset(log(LibSize)), family = poisson(link="log"))
-				 idx   <- match(rownames(model.frame(formula = CountData[iVar,]~Phenotypes + offset(log(LibSize)), na.action = na.omit)),
+				model0 <- try(glm(formula = CountData[iVar,]~Phenotypes + offset(log(LibSize)), family = poisson(link="log")))
+				idx   <- match(rownames(model.frame(formula = CountData[iVar,]~Phenotypes + offset(log(LibSize)), na.action = na.omit)),
       				      rownames(model.frame(formula = CountData[iVar,]~Phenotypes + offset(log(LibSize)), na.action = na.pass)))
 			}else{
-				model0 <- glm(formula = CountData[iVar,]~Covariates + Phenotypes + offset(log(LibSize)), family = poisson(link="log"))
-				 idx   <- match(rownames(model.frame(formula = CountData[iVar,]~Covariates + Phenotypes + offset(log(LibSize)), na.action = na.omit)),
+				model0 <- try(glm(formula = CountData[iVar,]~Covariates + Phenotypes + offset(log(LibSize)), family = poisson(link="log")))
+				idx   <- match(rownames(model.frame(formula = CountData[iVar,]~Covariates + Phenotypes + offset(log(LibSize)), na.action = na.omit)),
                           rownames(model.frame(formula = CountData[iVar,]~Covariates + Phenotypes + offset(log(LibSize)), na.action = na.pass)))
 			}
 		
@@ -111,9 +114,14 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
       
 			names(tmpRelatednessMatrix) <- paste("kins", 1:length(tmpRelatednessMatrix), sep="")
 
-			t1 <- system.time(model1 <- try( PQLseq.fit(model0, tmpRelatednessMatrix) ))
-		
-			if(class(model1) != "try-error"){
+			if(class(model0)[1]!="try-error"){
+				# t1 <- system.time(model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix)))
+				model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix))
+			}else{
+				model1 <- NULL
+			}
+	
+			if(!is.null(model1)&(class(model1)!="try-error")){				
 				if(verbose){cat(paste("PQLseq::PMM::tau = ", model1$theta,"\n"))}
 				numAnalysis <- length(idx)
 				beta        <- model1$coefficients[length(model1$coefficients)]
@@ -131,9 +139,9 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 							  converged = converged) 
 		}# end for iVar, parallel
 		rm(iVar)
-		# stop the cluster
-		# if(numCore > 1){stopCluster(cl)}
-		
+		closeAllConnections()
+		# if(nrow(showConnections())!=0){closeAllConnections()}
+
 		rownames(resPMM) <- rownames(CountData)
 		return(resPMM)
 	}# end PMM 
@@ -208,10 +216,11 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 				}
 				names(tmpRelatednessMatrix) <- paste("kins", 1:length(tmpRelatednessMatrix), sep="")
 
-				t1 <- system.time(model1 <- try( PQLseq.fit(model0, tmpRelatednessMatrix) ))
+				# t1 <- system.time(model1 <- try( PQLseq.fit(model0, tmpRelatednessMatrix) ))
+				model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix))
 		
-				if(class(model1) != "try-error"){
-				if(verbose){cat(paste("PQLseq::BMM::tau = ", model1$theta,"\n"))}
+				if(class(model1) != "try-error"&!is.null(model1)){
+					if(verbose){cat(paste("PQLseq::BMM::tau = ", model1$theta,"\n"))}
 					numAnalysis <- length(idx)
 					beta        <- model1$coefficients[ length(model1$coefficients) ]# the last one
 					se_beta     <- sqrt( diag(model1$cov)[ length(model1$coefficients) ] )
@@ -230,9 +239,9 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 		
 		}
 		rm(iVar)
-		# stop the cluster
-		#if(numCore > 1){stopCluster(cl)}
-		
+
+		# if(nrow(showConnections())!=0){closeAllConnections()}
+		closeAllConnections()
 		rownames(resBMM) <- rownames(CountData)
 		return(resBMM)
 	}# end BMM
@@ -247,7 +256,8 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 PQLseq.fit <- function(model0, RelatednessMatrix, method = "REML", method.optim = "AI", maxiter = 500, tol = 1e-5, verbose = FALSE) {
 	
 	names(RelatednessMatrix) <- paste("kins", 1:length(RelatednessMatrix), sep="")
-	if((method.optim == "AI")&(!sum(model0$fitted.values<1e-5))) {
+	# if((method.optim == "AI")&(!sum(model0$fitted.values<1e-5))) {
+	if(method.optim == "AI") {
 		fixtau.old 	<- rep(0, length(RelatednessMatrix)+1)
 		# to use average information method to fit alternative model
 		model1 		<- PQLseq.AI(model0, RelatednessMatrix, maxiter = maxiter, tol = tol, verbose = verbose)
@@ -255,12 +265,13 @@ PQLseq.fit <- function(model0, RelatednessMatrix, method = "REML", method.optim 
 
 		while(any(fixtau.new != fixtau.old)) {
 			fixtau.old <- fixtau.new
-			# to use average information method to fit alternative model
 			model1 	<- PQLseq.AI(model0, RelatednessMatrix, fixtau = fixtau.old, maxiter = maxiter, tol = tol, verbose = verbose)
 			fixtau.new <- 1*(model1$theta < 1.01 * tol)
 		}
-		return(model1)
+	}else{
+		model1 <- NULL
 	}
+	return(model1)
 }
 
 ##########################################################
