@@ -11,7 +11,7 @@
 
 pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatrix=NULL, LibSize=NULL, 
                   fit.model="PMM", fit.method = "AI.REML", fit.maxiter=500, fit.tol=1e-5, numCore=1, 
-				  filtering=TRUE, verbose=FALSE, ...) {
+				  filtering=TRUE, verbose=FALSE, lowrank = TRUE, ...) {
 	# specify the number of cores we want to use
 	if(numCore > 1){
 		if(numCore>detectCores()){warning("PQLseq:: the number of cores you're setting is larger than detected cores!");numCore = detectCores()-1}
@@ -58,7 +58,11 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
   
 	if(is.null(RelatednessMatrix)){
 		stop("PQLseq::please input relatedness matrix!")
+	}else if (lowrank == TRUE) {
+		Z = as.matrix(RelatednessMatrix)
+		RelatednessMatrix = tcrossprod(Z,Z)
 	}else{
+		Z                 <- NULL
 		RelatednessMatrix <- as.matrix(RelatednessMatrix)
 		scalerM           <- diag(numIDV)-(rep(1,numIDV)%*%t(rep(1,numIDV)))/numIDV
 		eig               <- eigen(RelatednessMatrix)
@@ -116,7 +120,7 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 
 			if(class(model0)[1]!="try-error"){
 				# t1 <- system.time(model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix)))
-				model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix))
+				model1 <- try(PQLseq.fit(model0, tmpRelatednessMatrix, Z = Z, lowrank=lowrank))
 			}else{
 				model1 <- NULL
 			}
@@ -253,19 +257,19 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 #           	   PQLseq FIT FUNCTION					 #
 ##########################################################
 
-PQLseq.fit <- function(model0, RelatednessMatrix, method = "REML", method.optim = "AI", maxiter = 500, tol = 1e-5, verbose = FALSE) {
+PQLseq.fit <- function(model0, RelatednessMatrix, method = "REML", method.optim = "AI", maxiter = 500, tol = 1e-5, verbose = FALSE, Z = NULL, lowrank=FALSE) {
 	
 	names(RelatednessMatrix) <- paste("kins", 1:length(RelatednessMatrix), sep="")
 	# if((method.optim == "AI")&(!sum(model0$fitted.values<1e-5))) {
 	if(method.optim == "AI") {
 		fixtau.old 	<- rep(0, length(RelatednessMatrix)+1)
 		# to use average information method to fit alternative model
-		model1 		<- PQLseq.AI(model0, RelatednessMatrix, maxiter = maxiter, tol = tol, verbose = verbose)
+		model1 		<- PQLseq.AI(model0, RelatednessMatrix, maxiter = maxiter, tol = tol, verbose = verbose, Z=Z, lowrank = lowrank)
 		fixtau.new 	<- 1*(model1$theta < 1.01 * tol)
 
 		while(any(fixtau.new != fixtau.old)) {
 			fixtau.old <- fixtau.new
-			model1 	<- PQLseq.AI(model0, RelatednessMatrix, fixtau = fixtau.old, maxiter = maxiter, tol = tol, verbose = verbose)
+			model1 	<- PQLseq.AI(model0, RelatednessMatrix, fixtau = fixtau.old, maxiter = maxiter, tol = tol, verbose = verbose, Z=Z, lowrank = lowrank)
 			fixtau.new <- 1*(model1$theta < 1.01 * tol)
 		}
 	}else{
@@ -278,7 +282,7 @@ PQLseq.fit <- function(model0, RelatednessMatrix, method = "REML", method.optim 
 #       PQLseq FIT AVERAGE INFORMATION FUNCTION			 #
 ##########################################################
 
-PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(RelatednessMatrix)+1), fixtau = rep(0, length(RelatednessMatrix)+1), maxiter = 500, tol = 1e-5, verbose = FALSE) {
+PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(RelatednessMatrix)+1), fixtau = rep(0, length(RelatednessMatrix)+1), maxiter = 500, tol = 1e-5, verbose = FALSE,Z = NULL, lowrank = FALSE) {
 
 	if(model0$family$family %in% c("binomial")){
 		y <- model0$numSucc
@@ -318,7 +322,19 @@ PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(Relatedness
 		H <- tau[1]*diag(1/D^2)
 		for(ik in 1:numK) {H <- H + tau[ik+1]*RelatednessMatrix[[ik]]}
 	
-		Hinv 	<- chol2inv(chol(H))
+		if (lowrank == TRUE) { #Woodbury's Matrix Identity 
+			A <- (tau[1]/D^2 + tau[3])
+			Ainv = diag(1/A)
+			Winv = chol2inv(chol( diag(rep(tau[2],dim(Z)[2])) + t(Z) %*% Ainv %*% Z))
+			AinvZ = crossprod(Ainv, Z)
+			Hinv  <-  Ainv + AinvZ %*% Winv %*% t(AinvZ)
+			rm(A)
+			rm(Ainv)
+			rm(Winv)
+			rm(AinvZ)
+		} else {
+			Hinv <- chol2inv(chol(H))
+		}
 		HinvX 	<- crossprod(Hinv, X)
 		XHinvX 	<- crossprod(X, HinvX)
 
@@ -342,7 +358,11 @@ PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(Relatedness
 	for (iter in seq_len(maxiter)) {	
 		alpha0 	<- alpha
 		tau0 	<- tau
-		model1 	<- AI(Y, X, length(RelatednessMatrix), RelatednessMatrix, D^2, tau, fixtau, tol)
+		if (lowrank  == FALSE) {
+			model1 	<- AI(Y, X, length(RelatednessMatrix), RelatednessMatrix, D^2, tau, fixtau, tol)
+		} else {
+			model1 	<- AILR(Y, X, length(RelatednessMatrix), RelatednessMatrix, Z, D^2, tau, fixtau, tol)
+		}
 		
 		tau <- as.numeric(model1$tau)
 		cov <- as.matrix(model1$cov)
@@ -380,3 +400,6 @@ PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(Relatedness
 #########################################
 #             CODE END                  #
 #########################################
+
+
+

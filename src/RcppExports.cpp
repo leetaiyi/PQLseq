@@ -24,6 +24,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// AILR
+SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Z, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin);
+RcppExport SEXP _PQLseq_AILR(SEXP YinSEXP, SEXP XinSEXP, SEXP numKinSEXP, SEXP PhiinSEXP, SEXP ZSEXP, SEXP DinSEXP, SEXP tauinSEXP, SEXP fixtauinSEXP, SEXP tolinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type Yin(YinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Xin(XinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type numKin(numKinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Phiin(PhiinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Din(DinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tauin(tauinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type fixtauin(fixtauinSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tolin(tolinSEXP);
+    rcpp_result_gen = Rcpp::wrap(AILR(Yin, Xin, numKin, Phiin, Z, Din, tauin, fixtauin, tolin));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpparma_hello_world
 arma::mat rcpparma_hello_world();
 RcppExport SEXP _PQLseq_rcpparma_hello_world() {
@@ -70,6 +89,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_PQLseq_AI", (DL_FUNC) &_PQLseq_AI, 8},
+    {"_PQLseq_AILR", (DL_FUNC) &_PQLseq_AILR, 9},
     {"_PQLseq_rcpparma_hello_world", (DL_FUNC) &_PQLseq_rcpparma_hello_world, 0},
     {"_PQLseq_rcpparma_outerproduct", (DL_FUNC) &_PQLseq_rcpparma_outerproduct, 1},
     {"_PQLseq_rcpparma_innerproduct", (DL_FUNC) &_PQLseq_rcpparma_innerproduct, 1},

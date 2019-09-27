@@ -151,6 +151,121 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 	return R_NilValue;
 }
 
+//*************************************************************************************//
+//                   AVERAGE INFORMATION METHOD (LOW RANK)                             //
+//*************************************************************************************//
+// [[Rcpp::export]]
+SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Z, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin)
+{/*Average Information with low rank Z*/
+    try {
+        vec Y = as<vec>(Yin);
+        mat X = as<mat>(Xin);
+        int numK = Rcpp::as<int>(numKin);
+        const Rcpp::List Phi(Phiin);
+		mat Z = as<mat>(Z);
+        vec D = as<vec>(Din);
+        vec tau = as<vec>(tauin);
+        const uvec fixtau = as<uvec>(fixtauin);
+        int numK2 = sum( fixtau == 0 );
+        const double tol = Rcpp::as<double>(tolin);
+        uvec ZERO = (tau < tol);
+        size_t numIDV = X.n_rows, numCVT = X.n_cols;
+        mat Hinv(numCVT, numCVT), XtHinvX_inv(numCVT, numCVT), P(numIDV, numIDV);
+        vec alpha(numCVT), eta(numIDV);
+        cube PHI(numIDV, numIDV, numK);
+        
+        mat H = tau[0] * diagmat(1.0 / D);
+        
+        for(size_t i=1; i<=numK; ++i) {
+            stringstream kins;
+            kins << "kins" << i;
+            PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
+            H = H + tau[i] * PHI.slice(i-1);
+        }
+        
+		vec A = tau[0] / D + tau[2];
+		mat Ainv = diagmat(1 / A);
+	    mat W = diagmat( tau[1] * ones(Z.n_cols()) ) + Z.t() * Ainv * Z;
+		vec eigval;
+		invTransformH( eigval, W);
+		Winv = W;
+		AinvZ = Ainv * Z
+		Hinv = Ainv + AinvZ * Winv * AinvZ.t()
+
+        mat HinvX = Hinv * X;
+        mat XtHinvX = X.t() * HinvX;
+        
+        mat U2;
+        vec eigval2;
+        
+        eig_sym( eigval2, U2, XtHinvX, "dc" );
+        
+        if(any(eigval2 < 1e-8)){
+            invTransformH( eigval2, XtHinvX );
+            XtHinvX_inv = XtHinvX;
+        }else{
+            XtHinvX_inv = U2 * diagmat( 1.0/eigval2 ) * U2.t();
+        }
+        
+        
+        // double time_mv =(clock()-time_start)/(double(CLOCKS_PER_SEC));
+        
+        
+        P = Hinv - HinvX * XtHinvX_inv * HinvX.t();
+        alpha = XtHinvX_inv * HinvX.t() * Y;
+        eta = Y - tau[0] * (Hinv * (Y - X * alpha)) / D;
+        
+        if(numK2 > 0) {
+            const uvec idxtau = find(fixtau == 0);
+            mat AImat(numK2, numK2);//average information matrix
+            vec PY = P * Y;
+            vec score(numK2), PAPY;
+            for(size_t i=0; i<numK2; ++i) {
+                if(i == 0 && idxtau[0] == 0) {
+                    PAPY = PY / D;
+                    score[0] = dot(PAPY, PY) - sum(diagvec(P) / D);
+                    AImat(0, 0) = dot(PAPY, P * PAPY);
+                } else {
+                    PAPY = P * PHI.slice(idxtau[i]-1) * PY;
+                    score[i] = dot(Y, PAPY) - accu(P % PHI.slice(idxtau[i]-1));
+                    for(size_t j=0; j<=i; ++j) {
+                        if(j == 0 && idxtau[0] == 0) {
+                            AImat(i,0) = dot(PY / D, PAPY);
+                            AImat(0,i) = AImat(i,0);
+                        } else {
+                            AImat(i,j) = dot(PY, PHI.slice(idxtau[j]-1) * PAPY);
+                            if(j!=i) {AImat(j,i) = AImat(i,j);}
+                        }
+                    }//end for j
+                }
+            }// end for i
+            
+            vec Dtau = solve(AImat, score);
+            vec tau0 = tau;
+            
+            tau.elem( idxtau ) = tau0.elem( idxtau ) + Dtau;
+            
+            tau.elem( find(ZERO % (tau < tol)) ).zeros();
+            double step = 1.0;
+            while(any(tau < 0.0)) {
+                step *= 0.5;
+                tau.elem( idxtau ) = tau0.elem( idxtau ) + step * Dtau;
+                tau.elem( find(ZERO % (tau < tol)) ).zeros();
+            }
+            tau.elem( find(tau < tol) ).zeros();
+        }
+        // return values
+        return List::create(Named("tau") = tau, Named("P") = P, Named("cov") = XtHinvX_inv,
+                            Named("alpha") = alpha, Named("eta") = eta, Named("H")=H);
+    } catch( std::exception &ex ) {
+        forward_exception_to_r( ex );
+    } catch(...) {
+        ::Rf_error( "C++ exception (unknown reason)..." );
+    }
+    return R_NilValue;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                             CODE END HERE                                           //
