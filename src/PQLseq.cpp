@@ -189,8 +189,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		vec eigval;
 		invTransformH( eigval, W);
 		mat Winv = W;
-		mat AinvZ = Ainv * Z
-		mat Hinv = Ainv + AinvZ * Winv * AinvZ.t()
+		mat AinvZ = Ainv * Z;
+		mat Hinv = Ainv + AinvZ * Winv * AinvZ.t();
 
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
