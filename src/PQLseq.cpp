@@ -185,12 +185,12 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
-	    mat W = diagmat( tau[1] * ones(Z.n_cols ) + Z.t() * Ainv * Z;
+	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
 		vec eigval;
 		invTransformH( eigval, W);
 		mat Winv = W;
 		mat AinvZ = Ainv * Z
-		Hinv = Ainv + AinvZ * Winv * AinvZ.t()
+		mat Hinv = Ainv + AinvZ * Winv * AinvZ.t()
 
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
