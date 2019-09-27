@@ -155,14 +155,14 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 //                   AVERAGE INFORMATION METHOD (LOW RANK)                             //
 //*************************************************************************************//
 // [[Rcpp::export]]
-SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Z, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin)
+SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin)
 {/*Average Information with low rank Z*/
     try {
         vec Y = as<vec>(Yin);
         mat X = as<mat>(Xin);
         int numK = Rcpp::as<int>(numKin);
         const Rcpp::List Phi(Phiin);
-		mat Z = as<mat>(Z);
+		mat Z = as<mat>(Zin);
         vec D = as<vec>(Din);
         vec tau = as<vec>(tauin);
         const uvec fixtau = as<uvec>(fixtauin);
@@ -185,11 +185,11 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Z, SEXP Din, SEXP ta
         
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
-	    mat W = diagmat( tau[1] * ones(Z.n_cols()) ) + Z.t() * Ainv * Z;
+	    mat W = diagmat( tau[1] * ones(Z.n_cols ) + Z.t() * Ainv * Z;
 		vec eigval;
 		invTransformH( eigval, W);
-		Winv = W;
-		AinvZ = Ainv * Z
+		mat Winv = W;
+		mat AinvZ = Ainv * Z
 		Hinv = Ainv + AinvZ * Winv * AinvZ.t()
 
         mat HinvX = Hinv * X;
