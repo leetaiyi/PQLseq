@@ -11,7 +11,7 @@
 
 pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatrix=NULL, LibSize=NULL, 
                   fit.model="PMM", fit.method = "AI.REML", fit.maxiter=500, fit.tol=1e-5, numCore=1, 
-				  filtering=TRUE, verbose=FALSE, lowrank = TRUE, ...) {
+				  filtering=TRUE, verbose=FALSE, lowrank = FALSE, ...) {
 	# specify the number of cores we want to use
 	if(numCore > 1){
 		if(numCore>detectCores()){warning("PQLseq:: the number of cores you're setting is larger than detected cores!");numCore = detectCores()-1}

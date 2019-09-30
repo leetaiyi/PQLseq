@@ -176,6 +176,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         
         mat H = tau[0] * diagmat(1.0 / D);
         
+		std::cout << "1";
+
         for(size_t i=1; i<=numK; ++i) {
             stringstream kins;
             kins << "kins" << i;
@@ -183,6 +185,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             H = H + tau[i] * PHI.slice(i-1);
         }
         
+		std::cout << "2";
+
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
 	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
@@ -192,6 +196,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		mat AinvZ = Ainv * Z;
 		Hinv = Ainv + AinvZ * Winv * AinvZ.t();
 
+		std::cout << "3";
+
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
         
@@ -199,7 +205,9 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         vec eigval2;
         
         eig_sym( eigval2, U2, XtHinvX, "dc" );
-        
+        std::cout << "4";
+
+
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
             XtHinvX_inv = XtHinvX;

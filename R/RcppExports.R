@@ -5,8 +5,8 @@ AI <- function(Yin, Xin, numKin, Phiin, Din, tauin, fixtauin, tolin) {
     .Call('_PQLseq_AI', PACKAGE = 'PQLseq', Yin, Xin, numKin, Phiin, Din, tauin, fixtauin, tolin)
 }
 
-AILR <- function(Yin, Xin, numKin, Phiin, Z, Din, tauin, fixtauin, tolin) {
-    .Call('_PQLseq_AILR', PACKAGE = 'PQLseq', Yin, Xin, numKin, Phiin, Z, Din, tauin, fixtauin, tolin)
+AILR <- function(Yin, Xin, numKin, Phiin, Zin, Din, tauin, fixtauin, tolin) {
+    .Call('_PQLseq_AILR', PACKAGE = 'PQLseq', Yin, Xin, numKin, Phiin, Zin, Din, tauin, fixtauin, tolin)
 }
 
 rcpparma_hello_world <- function() {

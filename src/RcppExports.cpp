@@ -25,8 +25,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // AILR
-SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Z, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin);
-RcppExport SEXP _PQLseq_AILR(SEXP YinSEXP, SEXP XinSEXP, SEXP numKinSEXP, SEXP PhiinSEXP, SEXP ZSEXP, SEXP DinSEXP, SEXP tauinSEXP, SEXP fixtauinSEXP, SEXP tolinSEXP) {
+SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin);
+RcppExport SEXP _PQLseq_AILR(SEXP YinSEXP, SEXP XinSEXP, SEXP numKinSEXP, SEXP PhiinSEXP, SEXP ZinSEXP, SEXP DinSEXP, SEXP tauinSEXP, SEXP fixtauinSEXP, SEXP tolinSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,12 +34,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type Xin(XinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type numKin(numKinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type Phiin(PhiinSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Zin(ZinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type Din(DinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type tauin(tauinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type fixtauin(fixtauinSEXP);
     Rcpp::traits::input_parameter< SEXP >::type tolin(tolinSEXP);
-    rcpp_result_gen = Rcpp::wrap(AILR(Yin, Xin, numKin, Phiin, Z, Din, tauin, fixtauin, tolin));
+    rcpp_result_gen = Rcpp::wrap(AILR(Yin, Xin, numKin, Phiin, Zin, Din, tauin, fixtauin, tolin));
     return rcpp_result_gen;
 END_RCPP
 }
