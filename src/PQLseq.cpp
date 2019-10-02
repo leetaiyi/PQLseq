@@ -174,16 +174,19 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         mat Hinv(numCVT, numCVT), XtHinvX_inv(numCVT, numCVT), P(numIDV, numIDV);
         vec alpha(numCVT), eta(numIDV);
         cube PHI(numIDV, numIDV, numK);
-        
+        	Rcout << "1" << std::endl;
+
         mat H = tau[0] * diagmat(1.0 / D);
-        
+        	Rcout << "2" << std::endl;
+
         for(size_t i=1; i<=numK; ++i) {
             stringstream kins;
             kins << "kins" << i;
             PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
             H = H + tau[i] * PHI.slice(i-1);
         }
-        
+        	Rcout << "3" << std::endl;
+
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
 	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
@@ -194,11 +197,14 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
-        
+        	Rcout << "4" << std::endl;
+
         mat U2;
         vec eigval2;
-        
+        	Rcout << "5" << std::endl;
+
         eig_sym( eigval2, U2, XtHinvX, "dc" );
+	Rcout << "6" << std::endl;
 
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
@@ -206,7 +212,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         }else{
             XtHinvX_inv = U2 * diagmat( 1.0/eigval2 ) * U2.t();
         }
-        
+        	Rcout << "7" << std::endl;
+
         
         // double time_mv =(clock()-time_start)/(double(CLOCKS_PER_SEC));
         
@@ -214,7 +221,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         P = Hinv - HinvX * XtHinvX_inv * HinvX.t();
         alpha = XtHinvX_inv * HinvX.t() * Y;
         eta = Y - tau[0] * (Hinv * (Y - X * alpha)) / D;
-        
+        	Rcout << "8" << std::endl;
+
         if(numK2 > 0) {
             const uvec idxtau = find(fixtau == 0);
             mat AImat(numK2, numK2);//average information matrix
