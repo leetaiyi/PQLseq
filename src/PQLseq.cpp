@@ -157,6 +157,7 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 // [[Rcpp::export]]
 SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin)
 {/*Average Information with low rank Z*/
+	Rcout << "0" << std::endl;
     try {
         vec Y = as<vec>(Yin);
         mat X = as<mat>(Xin);
@@ -176,8 +177,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         
         mat H = tau[0] * diagmat(1.0 / D);
         
-		std::cout << "1";
-
         for(size_t i=1; i<=numK; ++i) {
             stringstream kins;
             kins << "kins" << i;
@@ -185,8 +184,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             H = H + tau[i] * PHI.slice(i-1);
         }
         
-		std::cout << "2";
-
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
 	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
@@ -194,10 +191,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		invTransformH( eigval, W);
 		mat Winv = W;
 		mat AinvZ = Ainv * Z;
-		Hinv = Ainv + AinvZ * Winv * AinvZ.t();
-
-		std::cout << "3";
-
+		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
         
@@ -205,8 +199,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         vec eigval2;
         
         eig_sym( eigval2, U2, XtHinvX, "dc" );
-        std::cout << "4";
-
 
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
@@ -272,7 +264,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
     }
     return R_NilValue;
 }
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

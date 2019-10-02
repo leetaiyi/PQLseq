@@ -92,7 +92,6 @@ pqlseq <- function(RawCountDataSet, Phenotypes, Covariates=NULL, RelatednessMatr
 			LibSize <- as.matrix(t(LibSize))
 		}
 	 	 
-	 
 		# do parallel using foreach function
 		iVar   <- NULL
 		resPMM <-foreach(iVar=1:numVar,.combine=rbind)%dopar%{
@@ -325,9 +324,9 @@ PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(Relatedness
 		if (lowrank == TRUE) { #Woodbury's Matrix Identity 
 			A <- (tau[1]/D^2 + tau[3])
 			Ainv = diag(1/A)
-			Winv = chol2inv(chol( diag(rep(tau[2],dim(Z)[2])) + t(Z) %*% Ainv %*% Z))
+			Winv = chol2inv(chol( diag(rep(1/tau[2],dim(Z)[2])) + t(Z) %*% Ainv %*% Z))
 			AinvZ = crossprod(Ainv, Z)
-			Hinv  <-  Ainv + AinvZ %*% Winv %*% t(AinvZ)
+			Hinv  <-  Ainv - AinvZ %*% Winv %*% t(AinvZ)
 			rm(A)
 			rm(Ainv)
 			rm(Winv)
@@ -347,14 +346,14 @@ PQLseq.AI <- function(model0, RelatednessMatrix, tau = rep(0, length(Relatedness
 		PY <- crossprod(P, Y)
 		tau0 <- tau
 		for(ik in 1:numK2) {
-		        if(ik == 1 && fixtau[1] == 0) tau[1] <- max(0, tau0[1] + tau0[1]^2 * (sum((PY/D)^2) - sum(diag(P)/D^2))/numIDV)
+		    if(ik == 1 && fixtau[1] == 0) tau[1] <- max(0, tau0[1] + tau0[1]^2 * (sum((PY/D)^2) - sum(diag(P)/D^2))/numIDV)
 			else {
 				PAPY <- crossprod(P, crossprod(RelatednessMatrix[[idxtau[ik]-1]], PY))
 				tau[idxtau[ik]] <- max(0, tau0[idxtau[ik]] + tau0[idxtau[ik]]^2 * (crossprod(Y, PAPY) - sum(P*RelatednessMatrix[[idxtau[ik]-1]]))/numIDV)
 			}
 		}
 	} 
-	
+
 	for (iter in seq_len(maxiter)) {	
 		alpha0 	<- alpha
 		tau0 	<- tau
