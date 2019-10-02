@@ -266,6 +266,12 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 }
 
 
+// [[Rcpp::export]]
+void testprint() {
+	Rcout << "0" << std::endl;
+	return;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //                             CODE END HERE                                           //
 /////////////////////////////////////////////////////////////////////////////////////////
