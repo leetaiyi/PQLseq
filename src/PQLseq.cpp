@@ -197,7 +197,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		}
 		mat AinvZ = Ainv * Z;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
-		Rcout << Hinv[1:5,1:5] << std::endl;
+		mat ii = H*Hinv;
+		Rcout << trace(ii) << std::endl;
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
 
