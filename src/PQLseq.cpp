@@ -157,7 +157,6 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 // [[Rcpp::export]]
 SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP tauin, SEXP fixtauin, SEXP tolin)
 {/*Average Information with low rank Z*/
-	Rcout << "0" << std::endl;
     try {
         vec Y = as<vec>(Yin);  
         mat X = as<mat>(Xin);
@@ -174,10 +173,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         mat Hinv(numCVT, numCVT), XtHinvX_inv(numCVT, numCVT), P(numIDV, numIDV);
         vec alpha(numCVT), eta(numIDV);
         cube PHI(numIDV, numIDV, numK);
-        	Rcout << "1" << std::endl;
 
         mat H = tau[0] * diagmat(1.0 / D);
-        	Rcout << "2" << std::endl;
 
         for(size_t i=1; i<=numK; ++i) {
             stringstream kins;
@@ -185,19 +182,25 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
             H = H + tau[i] * PHI.slice(i-1);
         }
-        	Rcout << "3" << std::endl;
+        Rcout << "3" << std::endl;
 
 		vec A = tau[0] / D + tau[2];
+		Rcout << "3.1" << std::endl;
 		mat Ainv = diagmat(1 / A);
+		Rcout << "3.2" << std::endl;
 	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
+		Rcout << "3.3" << std::endl;
 		vec eigval;
 		invTransformH( eigval, W);
 		mat Winv = W;
 		mat AinvZ = Ainv * Z;
+		Rcout << "3.4" << std::endl;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
+		Rcout << "3.5" << std::endl;
         mat HinvX = Hinv * X;
+		Rcout << "3.6" << std::endl;
         mat XtHinvX = X.t() * HinvX;
-        	Rcout << "4" << std::endl;
+		Rcout << "3.7" << std::endl;
 
         mat U2;
         vec eigval2;
