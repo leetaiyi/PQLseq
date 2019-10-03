@@ -190,9 +190,16 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		Rcout << "3.2" << std::endl;
 	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
 		Rcout << "3.3" << std::endl;
+		mat Winv;
+		mat U;
 		vec eigval;
-		invTransformH( eigval, W);
-		mat Winv = W;
+		eig_sym(eigval, U, W, "dc" );
+		if(any(eigval < 1e-8)){
+			invTransformH( eigval, W );
+			Winv = W;
+		}else{
+			Winv = U * diagmat(1.0/eigval) * U.t();
+		}
 		mat AinvZ = Ainv * Z;
 		Rcout << "3.4" << std::endl;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
