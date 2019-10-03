@@ -198,7 +198,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		mat AinvZ = Ainv * Z;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
 		mat ii = H*Hinv;
-		Rcout << trace(ii) << std::endl;
+		// Rcout << trace(ii) << std::endl; //Debugging if inverse worked
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
 
