@@ -220,7 +220,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         P = Hinv - HinvX * XtHinvX_inv * HinvX.t();
         alpha = XtHinvX_inv * HinvX.t() * Y;
         eta = Y - tau[0] * (Hinv * (Y - X * alpha)) / D;
-=
+
         if(numK2 > 0) {
             const uvec idxtau = find(fixtau == 0);
             mat AImat(numK2, numK2);//average information matrix
