@@ -204,7 +204,11 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         	Rcout << "5" << std::endl;
 
         eig_sym( eigval2, U2, XtHinvX, "dc" );
+<<<<<<< Updated upstream
 	Rcout << "6" << std::endl;
+=======
+		Rcout << "6" << std::endl;
+>>>>>>> Stashed changes
 
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
