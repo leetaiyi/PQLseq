@@ -197,7 +197,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		}
 		mat AinvZ = Ainv * Z;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
-		mat ii = H*Hinv;
+		// mat ii = H*Hinv;
 		// Rcout << trace(ii) << std::endl; //Debugging if inverse worked
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
@@ -270,13 +270,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         ::Rf_error( "C++ exception (unknown reason)..." );
     }
     return R_NilValue;
-}
-
-
-// [[Rcpp::export]]
-void testprint() {
-	Rcout << "0" << std::endl;
-	return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
