@@ -182,14 +182,9 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
             H = H + tau[i] * PHI.slice(i-1);
         }
-        Rcout << "3" << std::endl;
-
 		vec A = tau[0] / D + tau[2];
-		Rcout << "3.1" << std::endl;
 		mat Ainv = diagmat(1 / A);
-		Rcout << "3.2" << std::endl;
-	    mat W = diagmat( tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
-		Rcout << "3.3" << std::endl;
+	    mat W = diagmat( 1/tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
 		mat Winv;
 		mat U;
 		vec eigval;
@@ -201,20 +196,15 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 			Winv = U * diagmat(1.0/eigval) * U.t();
 		}
 		mat AinvZ = Ainv * Z;
-		Rcout << "3.4" << std::endl;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
-		Rcout << "3.5" << std::endl;
+		Rcout << Hinv[1:5,1:5] << std::endl;
         mat HinvX = Hinv * X;
-		Rcout << "3.6" << std::endl;
         mat XtHinvX = X.t() * HinvX;
-		Rcout << "3.7" << std::endl;
 
         mat U2;
         vec eigval2;
-        	Rcout << "5" << std::endl;
 
         eig_sym( eigval2, U2, XtHinvX, "dc" );
-		Rcout << "6" << std::endl;
 
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
@@ -222,7 +212,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         }else{
             XtHinvX_inv = U2 * diagmat( 1.0/eigval2 ) * U2.t();
         }
-        	Rcout << "7" << std::endl;
 
         
         // double time_mv =(clock()-time_start)/(double(CLOCKS_PER_SEC));
@@ -231,8 +220,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         P = Hinv - HinvX * XtHinvX_inv * HinvX.t();
         alpha = XtHinvX_inv * HinvX.t() * Y;
         eta = Y - tau[0] * (Hinv * (Y - X * alpha)) / D;
-        	Rcout << "8" << std::endl;
-
+=
         if(numK2 > 0) {
             const uvec idxtau = find(fixtau == 0);
             mat AImat(numK2, numK2);//average information matrix
