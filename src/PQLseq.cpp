@@ -183,19 +183,24 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
             H = H + tau[i] * PHI.slice(i-1);
         }
-		std::cout << tau << std::endl;
+
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
+		
 	    mat W = diagmat( 1/tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
 		mat Winv;
 		mat U;
 		vec eigval;
-		eig_sym(eigval, U, W, "dc" );
-		if(any(eigval < 1e-8)){
-			invTransformH( eigval, W );
-			Winv = W;
-		}else{
-			Winv = U * diagmat(1.0/eigval) * U.t();
+		if (tau[1] < 1e-8) {
+			Winv = Ainv;
+		} else {
+			eig_sym(eigval, U, W, "dc" );
+			if(any(eigval < 1e-8)){
+				invTransformH( eigval, W );
+				Winv = W;
+				}else{
+				Winv = U * diagmat(1.0/eigval) * U.t();
+			}
 		}
 
 		mat AinvZ = Ainv * Z;
