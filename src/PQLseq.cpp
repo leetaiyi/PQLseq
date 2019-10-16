@@ -189,14 +189,12 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		mat U;
 		vec eigval;
 		eig_sym(eigval, U, W, "dc" );
-		std::cout << "1" << std::endl;
 		if(any(eigval < 1e-8)){
 			invTransformH( eigval, W );
 			Winv = W;
 		}else{
 			Winv = U * diagmat(1.0/eigval) * U.t();
 		}
-				std::cout << "2" << std::endl;
 
 		mat AinvZ = Ainv * Z;
 		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
@@ -204,13 +202,11 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		// Rcout << trace(ii) << std::endl; //Debugging if inverse worked
         mat HinvX = Hinv * X;
         mat XtHinvX = X.t() * HinvX;
-		std::cout << "3" << std::endl;
 
         mat U2;
         vec eigval2;
-
+		std::cout << XtHinvX << std::endl;
         eig_sym( eigval2, U2, XtHinvX, "dc" );
-		std::cout << "4" << std::endl;
 
         if(any(eigval2 < 1e-8)){
             invTransformH( eigval2, XtHinvX );
@@ -218,8 +214,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
         }else{
             XtHinvX_inv = U2 * diagmat( 1.0/eigval2 ) * U2.t();
         }
-		std::cout << "5" << std::endl;
-
         
         // double time_mv =(clock()-time_start)/(double(CLOCKS_PER_SEC));
         
