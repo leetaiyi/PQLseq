@@ -64,7 +64,8 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 			PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
 			H = H + tau[i] * PHI.slice(i-1);
 		}
-		
+		std::cout << H << std::endl;
+
 		mat U;
 		vec eigval;
 		
@@ -83,7 +84,6 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 		
 		mat U2;
 		vec eigval2;
-		std::cout << XtHinvX << std::endl;
 
 		eig_sym( eigval2, U2, XtHinvX, "dc" );
 
@@ -183,6 +183,8 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
             PHI.slice(i-1) = symmatl(as<mat>(Phi[kins.str()]));
             H = H + tau[i] * PHI.slice(i-1);
         }
+		std::cout << H << std::endl;
+
 		vec A = tau[0] / D + tau[2];
 		mat Ainv = diagmat(1 / A);
 	    mat W = diagmat( 1/tau[1] * ones(Z.n_cols ) ) + Z.t() * Ainv * Z;
@@ -206,7 +208,6 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 
         mat U2;
         vec eigval2;
-		std::cout << XtHinvX << std::endl;
         eig_sym( eigval2, U2, XtHinvX, "dc" );
 
         if(any(eigval2 < 1e-8)){
