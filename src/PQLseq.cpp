@@ -83,6 +83,7 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 		
 		mat U2;
 		vec eigval2;
+		std::cout << XtHinvX << std::endl;
 
 		eig_sym( eigval2, U2, XtHinvX, "dc" );
 
