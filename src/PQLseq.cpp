@@ -67,7 +67,6 @@ SEXP AI(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Din, SEXP tauin, SEXP 
 
 		mat U;
 		vec eigval;
-		std::cout << tau << std::endl;
 
 		// double time_start=clock();
 		eig_sym(eigval, U, H, "dc" );
@@ -192,7 +191,7 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 		mat U;
 		vec eigval;
 		if (tau[1] < 1e-8) {
-			Winv = Ainv;
+			Hinv = Ainv;
 		} else {
 			eig_sym(eigval, U, W, "dc" );
 			if(any(eigval < 1e-8)){
@@ -201,10 +200,11 @@ SEXP AILR(SEXP Yin, SEXP Xin, SEXP numKin, SEXP Phiin, SEXP Zin, SEXP Din, SEXP 
 				}else{
 				Winv = U * diagmat(1.0/eigval) * U.t();
 			}
+			mat AinvZ = Ainv * Z;
+			Hinv = Ainv - AinvZ * Winv * AinvZ.t();
 		}
 
-		mat AinvZ = Ainv * Z;
-		Hinv = Ainv - AinvZ * Winv * AinvZ.t();
+
 		// mat ii = H*Hinv;
 		// Rcout << trace(ii) << std::endl; //Debugging if inverse worked
         mat HinvX = Hinv * X;
